@@ -8,7 +8,7 @@ function [phi,dphi] = wachspress2d_opt(x,domain)
 % dphi : output gradient of basis functions = [dphi_1; ...; dphi_n]
 
 % based on the Matlab code from :
-% M. Floater, A. Gillette, and N. Sukumar, 
+% M. Floater, A. Gillette, and N. Sukumar,
 % “Gradient bounds for Wachspress coordinates on polytopes,”
 % SIAM J. Numer. Anal., vol. 52, no. 1, pp. 515–532, 2014,%
 % doi: 10.1137/130925712.
@@ -17,7 +17,7 @@ function [phi,dphi] = wachspress2d_opt(x,domain)
 
 v=domain.vertices;
 np=size(x,1);
-n = size(v,1); 
+n = size(v,1);
 
 un = reshape(getNormals(v).',2,1,[]);
 h = mult(reshape(v.',1,2,[]) - reshape(x.',1,2,1,np),un);
