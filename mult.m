@@ -1,3 +1,18 @@
+%Copyright (C) 2022 Théodore CHERRIERE (theodore.cherriere@ens-paris-saclay.fr)
+
+%This program is free software: you can redistribute it and/or modify
+%it under the terms of the GNU General Public License as published by
+%the Free Software Foundation, either version 3 of the License, or
+%(at your option) any later version.
+
+%This program is distributed in the hope that it will be useful,
+%but WITHOUT ANY WARRANTY; without even the implied warranty of
+%MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%GNU General Public License for more details.
+
+%You should have received a copy of the GNU General Public License
+%along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 function result=mult(varargin)
 % result=mult(A1,A2,...,AN)
 %__________________________________________________________________________
@@ -23,14 +38,31 @@ function result=mult(varargin)
 % toc
 % max(abs(r1-r2),[],'all')
 
-if version
+vv = ver('MATLAB');
+vvNum = str2double(vv.Release(3:end-2));
+vvId = vv.Release(end-1:end-1);
 
-    result=varargin{1};
+vvOld=false;
+
+if vvNum<2020
+    vvOld=True;
+elseif vvNum==2020 && vvId < 'b'
+    vvOld=True;
+end
+
+result=varargin{1};
+
+if vvOld
+     for i=2:length(varargin)
+        result=mmx('mult',resultat,varargin{i}); 
+     end
+    % check https://github.com/yuvaltassa/mmx to get MMX
+else
     for i=2:length(varargin)
-        result=pagemtimes(result,varargin{i}); % for new Matlab versions
-        %resultat=mmx('mult',resultat,varargin{i}); % else (check
-        % https://github.com/yuvaltassa/mmx)
+        result=pagemtimes(result,varargin{i});
     end
+end
+
 end
 
     

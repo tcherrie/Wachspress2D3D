@@ -1,36 +1,48 @@
+%Copyright (C) 2022 Théodore CHERRIERE (theodore.cherriere@ens-paris-saclay.fr)
+
+%This program is free software: you can redistribute it and/or modify
+%it under the terms of the GNU General Public License as published by
+%the Free Software Foundation, either version 3 of the License, or
+%(at your option) any later version.
+
+%This program is distributed in the hope that it will be useful,
+%but WITHOUT ANY WARRANTY; without even the implied warranty of
+%MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%GNU General Public License for more details.
+
+%You should have received a copy of the GNU General Public License
+%along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 classdef Domain
-    %DOMAINE Summary of this class goes here
-    %   Detailed explanation goes here
+    %Domain Class for domain objects
     
     properties
-        vertices
-        edges
-        facets
-        normals
-        vertices2facets
-        edges2facets
-        dimension
-        normal_fan
+        vertices  % cartesian coordinates of vertices
+        edges     % connectivity of edges in relation to vertices (3D domains only)
+        facets    % connectivity of facets i.r.t edges(3D domains only)
+        normals   % outgoing normal vectors i.r.t facets (3D domains only)
+        vertices2facets   % connectivity of vertices i.r.t facets (3D domains only)
+        edges2facets % connectivity of edges i.r.t vertices (3D domains only)
+        dimension % dimension of the domain (0D, 1D, 2D or 3D)
+        normal_fan % normal fan of the domain (computed automatically)
     end
     
     methods
         function obj = Domain(type)
-
-            % Catalog of available domains :
-
             % For 0D, 1D and 2D regular polytopes, type is a number which
             % indicates the number of vertices :
-                %  type = 1 -> a dot (dimension = 0)
-                %  type = 2 -> a line (dimension = 1)
-                %  type = n > 2 -> a regular polygon with n vertices (dimension 2)
-
-            % For 3D polytopes, type is a string which denote a specific 
+            %  type = 1 -> a dot (0D)
+            %  type = 2 -> a line (1D)
+            %  type = n > 2 -> a regular 2D polygon with n vertices
+            
+            % For 3D polytopes, type is a string which denotes a specific
             % polytope. Available :
-                %  "tetra" or "tetraedron" -> tetraedron
-                %  "cube" -> cube
-                %  "diamondN" -> diamond with a base of N vertices (N is a number)
-                %  "prismN" -> prism with a base of N vertices (N is a number)
-
+            %  "tetra" or "tetraedron" -> tetraedron
+            %  "cube" -> cube
+            %  "diamondN" -> diamond with a base of N vertices (N is an integer)
+            %  "prismN" -> prism with a base of N vertices (N is an integer)
+            % Feel free to add other types of 3D domains.
+            
             if class(type)=="double" && type==1 % dimension 0 : a dot
                 obj.vertices=0;
                 obj.dimension=0;
@@ -52,10 +64,10 @@ classdef Domain
                     v=type;
                     obj.vertices=type;
                 end
-
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %% 3D
-       
+                
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %% 3D
+                
             elseif lower(type)=="tetra" || lower(type)=="tetraedron"
                 theta=linspace(0,2*pi,3+1)+(2*pi)/(2*3);
                 theta=shiftdim(theta(1:end-1),-2);
@@ -88,7 +100,7 @@ classdef Domain
             elseif lower(type)=="cube"
                 v=[0,0,0;1 0 0;0 1 0 ;1 1 0; 0 0 1; 1 0 1; 0 1 1; 1 1 1]; obj.vertices=v-mean(v,1);
                 obj.vertices2facets={[1,4,6];[2,1,6];[4,3,6];[3,2,6];[5,4,1];[5,1,2];[5,3,4];[5,2,3]};
-
+                
                 un(1,:)=cross(v(2,:),v(5,:)); un(2,:)=cross(v(4,:)-v(2,:),v(6,:)-v(2,:));
                 un(3,:)=cross(v(3,:)-v(4,:),v(8,:)-v(4,:)); un(4,:)=cross(v(1,:)-v(3,:),v(7,:)-v(3,:));
                 un(5,:)=cross(v(6,:)-v(5,:),v(7,:)-v(5,:)); un(6,:)=cross(v(1,:)-v(2,:),v(4,:)-v(2,:));
@@ -158,7 +170,7 @@ classdef Domain
                     end
                 end
                 v=obj.vertices;
-            
+                
             elseif contains(lower(type),"prism")
                 n  = str2double(extract(lower(type),regexpPattern("\d+")));
                 theta=linspace(0,2*pi,n+1)+pi/n;
@@ -187,7 +199,7 @@ classdef Domain
                 obj.facets{n+1}=1:n;
                 obj.facets{n+2}=n+(1:n);
                 for i=1:n
-                   un(i,:)=cross(v(mod(i,n)+1,:)-v(i,:),v(n+i,:)-v(i,:));
+                    un(i,:)=cross(v(mod(i,n)+1,:)-v(i,:),v(n+i,:)-v(i,:));
                 end
                 un(n+1,:)=[0,0,-1];
                 un(n+2,:)=[0,0,1];
@@ -212,7 +224,7 @@ classdef Domain
                 obj.normal_fan.edges=edges;
                 obj.normal_fan.vertices=vertices;
                 obj.dimension=2;
-
+                
                 obj.edges=edges;
                 normales=[0,1;-1 0]*(obj.vertices(obj.edges(:,2),:)-obj.vertices(obj.edges(:,1),:)).';
                 obj.normals=((normales).')./vecnorm(normales.',2,2);
@@ -256,16 +268,16 @@ classdef Domain
         end
         
         
-        %% Affichage
+        %% Display
         
-        function plot_Wachspress(obj,n,legende)
+        function plot_Wachspress(obj,n,legend_vertices)
             if nargin<=1 || isempty(n)
                 n=1;
             end
             
-            if nargin<=2 || isempty(legende)
+            if nargin<=2 || isempty(legend_vertices)
                 for i=1:length(obj.vertices)
-                    legende(i)=convertCharsToStrings(strcat("v",num2str(i)));
+                    legend_vertices(i)=convertCharsToStrings(strcat("v",num2str(i)));
                 end
             end
             
@@ -277,14 +289,14 @@ classdef Domain
                 plot(x,w(:));
                 xlabel('x');
                 ylabel('\omega(x)');
-                for i=1:length(legende)
+                for i=1:length(legend_vertices)
                     try
-                        text(v_centre(i)*1.15,0,legende(i))
+                        text(v_centre(i)*1.15,0,legend_vertices(i))
                     end
                 end
             elseif size(v_centre,2)==2 %2D
                 
-                 pgon=polyshape(v_centre(:,1)*0.99999,v_centre(:,2)*0.99999);
+                pgon=polyshape(v_centre(:,1)*0.99999,v_centre(:,2)*0.99999);
                 [x,y]=meshgrid(linspace(-max(abs(v_centre(:))),max(abs(v_centre(:))),200),linspace(-max(abs(v_centre(:))),max(abs(v_centre(:))),200));
                 in=pgon.isinterior(x(:),y(:));
                 tr = delaunayTriangulation(x(in),y(in));
@@ -295,9 +307,9 @@ classdef Domain
                 axis([-maxval maxval -maxval maxval]*1.5);axis equal
                 hold on; plot(pgon,'facealpha',0); grid on;
                 shading interp
-                for i=1:length(legende)
+                for i=1:length(legend_vertices)
                     try
-                        text(v_centre(i,1)*1.15,v_centre(i,2)*1.2,legende(i))
+                        text(v_centre(i,1)*1.15,v_centre(i,2)*1.2,legend_vertices(i))
                     end
                 end
                 axis off
@@ -314,29 +326,26 @@ classdef Domain
                 [x,y]=meshgrid(0:0.01:1,0:0.01:1);
                 tri1=delaunay(x,y);
                 tri=[];
-                noeuds=[];
+                nodes=[];
                 for i=1:size(BF,1)
                     plan1=[0 0 0;1 0 0;0 1 0]+2;
                     plan2=[P(BF(i,:),1),P(BF(i,:),2),P(BF(i,:),3)];
                     M=get_transform_plan(plan1,plan2);
-                    noeuds_plan=M*[x(:).'+2;y(:).'+2;ones(1,length(x(:)))*2;ones(1,length(x(:)))];
-                    tri=[tri;tri1+length(noeuds)];
-                    noeuds=[noeuds;noeuds_plan(1:3,:).'];
+                    nodes_plan=M*[x(:).'+2;y(:).'+2;ones(1,length(x(:)))*2;ones(1,length(x(:)))];
+                    tri=[tri;tri1+length(nodes)];
+                    nodes=[nodes;nodes_plan(1:3,:).'];
                 end
-                noeuds=noeuds*0.99999;
+                nodes=nodes*0.99999;
                 
-                X0=sum([noeuds(tri(:,1),1),noeuds(tri(:,2),1),noeuds(tri(:,3),1)],2)/3;
-                Y0=sum([noeuds(tri(:,1),2),noeuds(tri(:,2),2),noeuds(tri(:,3),2)],2)/3;
-                Z0=sum([noeuds(tri(:,1),3),noeuds(tri(:,2),3),noeuds(tri(:,3),3)],2)/3;
+                X0=sum([nodes(tri(:,1),1),nodes(tri(:,2),1),nodes(tri(:,3),1)],2)/3;
+                Y0=sum([nodes(tri(:,1),2),nodes(tri(:,2),2),nodes(tri(:,3),2)],2)/3;
+                Z0=sum([nodes(tri(:,1),3),nodes(tri(:,2),3),nodes(tri(:,3),3)],2)/3;
                 in=shp.inShape(X0,Y0,Z0);
                 tri=tri(in,:);
-                w=wachspress(noeuds,obj); w=w(n,:,:);
+                w=wachspress(nodes,obj); w=w(n,:,:);
                 w(w>1)=1; w(w<0)=0; % for points outside the polyhedron
-                trisurf(tri,noeuds(:,1),noeuds(:,2),noeuds(:,3),w(:))
+                trisurf(tri,nodes(:,1),nodes(:,2),nodes(:,3),w(:))
                 shading interp
-                %figure()
-                %patch(X.',Y.',Z.',c,'CDataMapping','direct','Edgealpha',0);
-                %colormap(c); 
                 axis equal
                 colorbar off; grid on;
                 light('Position',[-50 -15 10])
@@ -345,9 +354,9 @@ classdef Domain
                 view(45,30)
                 axis off
                 
-                for i=1:length(legende)
+                for i=1:length(legend_vertices)
                     try
-                        text(v_centre(i,1)*1.15,v_centre(i,2)*1.2,v_centre(i,3)*1.2,legende(i))
+                        text(v_centre(i,1)*1.15,v_centre(i,2)*1.2,v_centre(i,3)*1.2,legend_vertices(i))
                     end
                 end
                 
@@ -367,42 +376,36 @@ classdef Domain
             end
         end
         
-        function plot(obj,legende)
-            % Gère jusqu'à un champs de 3 densités, pour 8 matériaux max
-           
-            if nargin<=1 || isempty(legende)
+        function plot(obj,legend_mat)
+            if nargin<=1 || isempty(legend_mat)
                 for i=1:length(obj.vertices)
-                    legende(i)=convertCharsToStrings(strcat("v",num2str(i)));
+                    legend_mat(i)=convertCharsToStrings(strcat("v",num2str(i)));
                 end
             end
-
-            couleur = legend2color(legende);
+            
+            couleur = legend2color(legend_mat);
             n_couleurs=length(obj.vertices);
-            v_centre=obj.vertices-mean(obj.vertices,1);
-           
-            if size(v_centre,2)==1 && size(v_centre,1)==2 % 1D = 2 materials
-                x=linspace(v_centre(1),v_centre(2),100).';
+            v_center=obj.vertices-mean(obj.vertices,1);
+            
+            if size(v_center,2)==1 && size(v_center,1)==2 % 1D = 2 materials
+                x=linspace(v_center(1),v_center(2),100).';
                 y=zeros(100,1) ;
                 w=wachspress(x,obj);
                 c=permute(sum(couleur(1:2,:).*(w.^5),1)+0.5,[3 2 1]);
-                surf([x(:) x(:)], [y(:) y(:)], [x(:) x(:)], ...  % Reshape and replicate data
-                    'FaceColor', 'none', ...    % Don't bother filling faces with color
-                    'EdgeColor', 'interp', ...  % Use interpolated color for edges
-                    'LineWidth', 5);            % Make a thicker line
-                view(2);   % Default 2-D view
+                surf([x(:) x(:)], [y(:) y(:)], [x(:) x(:)],'FaceColor', 'none','EdgeColor', 'interp');
                 colormap(c);
-                axis(1.4*[-max(abs(v_centre(:))),max(abs(v_centre(:))),-max(abs(v_centre(:))),max(abs(v_centre(:)))])
-                for i=1:length(legende)
+                axis(1.4*[-max(abs(v_center(:))),max(abs(v_center(:))),-max(abs(v_center(:))),max(abs(v_center(:)))])
+                for i=1:length(legend_mat)
                     try
-                        text(v_centre(i)*1.15,0,legende(i))
+                        text(v_center(i)*1.15,0,legend_mat(i))
                     end
                 end
                 axis off
                 
-            elseif size(v_centre,2)==2 %2D
+            elseif size(v_center,2)==2 %2D
                 
-                pgon=polyshape(v_centre(:,1)*0.99999,v_centre(:,2)*0.99999);
-                [x,y]=meshgrid(linspace(-max(abs(v_centre(:))),max(abs(v_centre(:))),100),linspace(-max(abs(v_centre(:))),max(abs(v_centre(:))),100));
+                pgon=polyshape(v_center(:,1)*0.99999,v_center(:,2)*0.99999);
+                [x,y]=meshgrid(linspace(-max(abs(v_center(:))),max(abs(v_center(:))),100),linspace(-max(abs(v_center(:))),max(abs(v_center(:))),100));
                 in=pgon.isinterior(x(:),y(:));
                 tr = delaunayTriangulation(x(in),y(in));
                 nodes=tr.Points; elements=tr.ConnectivityList;
@@ -416,45 +419,44 @@ classdef Domain
                 axis([-maxval maxval -maxval maxval]*1.5);axis equal
                 hold on; plot(pgon,'facealpha',0); grid on;
                 
-                for i=1:length(legende)
+                for i=1:length(legend_mat)
                     try
-                        text(v_centre(i,1)*1.15,v_centre(i,2)*1.2,legende(i))
+                        text(v_center(i,1)*1.15,v_center(i,2)*1.2,legend_mat(i))
                     end
                 end
                 axis off
                 hold off;
                 
-            elseif size(v_centre,2)==3 %3D
+            elseif size(v_center,2)==3 %3D
                 
-                shp=alphaShape(v_centre(:,1),v_centre(:,2),v_centre(:,3),Inf);
+                shp=alphaShape(v_center(:,1),v_center(:,2),v_center(:,3),Inf);
                 [BF, P] = boundaryFacets(shp);
                 [x,y]=meshgrid(0:0.01:1,0:0.01:1);
                 tri1=delaunay(x,y);
                 tri=[];
-                noeuds=[];
+                nodes=[];
                 for i=1:size(BF,1)
                     plan1=[0 0 0;1 0 0;0 1 0]+2;
                     plan2=[P(BF(i,:),1),P(BF(i,:),2),P(BF(i,:),3)];
                     M=get_transform_plan(plan1,plan2);
-                    noeuds_plan=M*[x(:).'+2;y(:).'+2;ones(1,length(x(:)))*2;ones(1,length(x(:)))];
-                    tri=[tri;tri1+length(noeuds)];
-                    noeuds=[noeuds;noeuds_plan(1:3,:).'];
+                    nodes_plan=M*[x(:).'+2;y(:).'+2;ones(1,length(x(:)))*2;ones(1,length(x(:)))];
+                    tri=[tri;tri1+length(nodes)];
+                    nodes=[nodes;nodes_plan(1:3,:).'];
                 end
-                noeuds=noeuds*0.999;
+                nodes=nodes*0.999;
                 
-                X0=sum([noeuds(tri(:,1),1),noeuds(tri(:,2),1),noeuds(tri(:,3),1)],2)/3;
-                Y0=sum([noeuds(tri(:,1),2),noeuds(tri(:,2),2),noeuds(tri(:,3),2)],2)/3;
-                Z0=sum([noeuds(tri(:,1),3),noeuds(tri(:,2),3),noeuds(tri(:,3),3)],2)/3;
+                X0=sum([nodes(tri(:,1),1),nodes(tri(:,2),1),nodes(tri(:,3),1)],2)/3;
+                Y0=sum([nodes(tri(:,1),2),nodes(tri(:,2),2),nodes(tri(:,3),2)],2)/3;
+                Z0=sum([nodes(tri(:,1),3),nodes(tri(:,2),3),nodes(tri(:,3),3)],2)/3;
                 
                 in=shp.inShape(X0,Y0,Z0);
                 tri=tri(in,:);
                 X0=X0(in); Y0=Y0(in); Z0=Z0(in);
                 w=wachspress([X0,Y0,Z0],obj);
-                X=[noeuds(tri(:,1),1),noeuds(tri(:,2),1),noeuds(tri(:,3),1)];
-                Y=[noeuds(tri(:,1),2),noeuds(tri(:,2),2),noeuds(tri(:,3),2)];
-                Z=[noeuds(tri(:,1),3),noeuds(tri(:,2),3),noeuds(tri(:,3),3)];
+                X=[nodes(tri(:,1),1),nodes(tri(:,2),1),nodes(tri(:,3),1)];
+                Y=[nodes(tri(:,1),2),nodes(tri(:,2),2),nodes(tri(:,3),2)];
+                Z=[nodes(tri(:,1),3),nodes(tri(:,2),3),nodes(tri(:,3),3)];
                 c=permute(sum(couleur(1:n_couleurs,:).*(w.^5),1)+0.5,[3 2 1]);
-                %figure()
                 patch(X.',Y.',Z.',1:length(c),'CDataMapping','direct','Edgealpha',0);
                 colormap(c); axis equal
                 colorbar off; grid on;
@@ -463,15 +465,15 @@ classdef Domain
                 lighting flat
                 view(45,30)
                 
-                for i=1:length(legende)
-                    text(v_centre(i,1)*1.2,v_centre(i,2)*1.2,v_centre(i,3)*1.2,legende(i))
+                for i=1:length(legend_mat)
+                    text(v_center(i,1)*1.2,v_center(i,2)*1.2,v_center(i,3)*1.2,legend_mat(i))
                 end
             end
             hold off;
             axis off
         end
         
-
+        
         function plot_sub(obj,legende,k)
             color=["k","r","g","b","m","c","y"];
             if obj.dimension==0
@@ -479,7 +481,7 @@ classdef Domain
                 text(obj.vertices(1),obj.vertices(2),obj.vertices(3),legende)
                 
             elseif obj.dimension==1
-               
+                
                 plot3(obj.vertices(:,1),obj.vertices(:,2),obj.vertices(:,3),color(k),'linewidth',2)
                 for i=1:length(legende)
                     text(obj.vertices(i,1),obj.vertices(i,2),obj.vertices(i,3),legende(i))
@@ -501,7 +503,7 @@ classdef Domain
             end
         end
         
-
+        
         function plot_normalFan(obj)
             alpha=0.2;
             L3D=1;
@@ -509,7 +511,7 @@ classdef Domain
             h=figure();
             hold on
             listplot=obj.vertices(reshape(obj.edges.',[],1),:);
-
+            
             if obj.dimension==2
                 for i=1:length(obj.vertices) % point
                     p1=obj.vertices(i,:);
@@ -551,11 +553,11 @@ classdef Domain
                     p=[p1;p2;p3;p4;p5;p6];
                     toit=alphaShape(p(:,1),p(:,2),p(:,3),Inf);
                     plot(toit,'facecolor','g','edgecolor','g','FaceAlpha',alpha,'EdgeAlpha',0)
-                end  
+                end
                 for i=1:length(obj.normal_fan.cones_facets) % facet
                     edges_facette=abs(obj.facets{i}(:));
-                    noeuds_facette=unique(obj.edges(edges_facette(:),:));
-                    vloc_base=obj.vertices(noeuds_facette,:);
+                    nodes_facette=unique(obj.edges(edges_facette(:),:));
+                    vloc_base=obj.vertices(nodes_facette,:);
                     vloc_extrude=vloc_base+obj.normals(i,:)*L3D;
                     vshp=[vloc_base;vloc_extrude];
                     prism=alphaShape(vshp(:,1),vshp(:,2),vshp(:,3),Inf);
@@ -563,6 +565,7 @@ classdef Domain
                 end
                 scatter3(obj.vertices(:,1),obj.vertices(:,2),obj.vertices(:,3),'k','filled');
                 plot3(reshape(listplot(:,1),2,[]),reshape(listplot(:,2),2,[]),reshape(listplot(:,3),2,[]),'k');
+                view(3)
             else
                 error("incorrect dimension")
             end
@@ -571,18 +574,14 @@ classdef Domain
             axis off
             hold off
         end
-       
+        
     end
 end
 
 
 function [rectangles,triangles,edges,vertices]=normalFan2D(v,epsilon)
 
-% renvoie une liste des triangles et rectangles qui constituent la variété
-% normale au polygone (qui doit être convexe), ainsi que les arêtes et les
-% points associés.
-
-if nargin<=2
+if nargin<=2 || isempty(epsilon)
     epsilon=1e-7;
 end
 
@@ -603,9 +602,6 @@ for i=1:nv % rectangle
     p3=p4+100*normales(i,:);
     p=[p1;p2;p3;p4];
     rectangles{i}=polyshape(p(:,1),p(:,2));
-    %plot(rectangles{i},'facecolor','b')
-    %hold on
-    %pause(0.1)
 end
 
 triangles=cell(nv,1);
@@ -616,16 +612,12 @@ for i=1:nv-1 % triangles
     p3=p1+100*normales(i+1,:);
     p=[p1;p2;p3];
     triangles{i+1}=polyshape(p(:,1),p(:,2));
-    %plot(triangles{i+1},'facecolor','r')
-    %hold on
-    %pause(0.1)
 end
 p1=v(1,:);
 p2=p1+100*normales(nv,:);
 p3=p1+100*normales(1,:);
 p=[p1;p2;p3];
 triangles{1}=polyshape(p(:,1),p(:,2));
-%plot(triangles{1},'facecolor','r')
 end
 
 function [prismes,toits,cones,facets,edges,vertices]=variete_normale3D(domain,epsilon)
@@ -653,19 +645,16 @@ prismes=cell(nf,1);
 
 for i=1:nf % prismes
     edges_facette=abs(facets{i}(:));
-    noeuds_facette=unique(edges(edges_facette(:),:));
-    vloc_base=v(noeuds_facette,:);
+    nodes_facette=unique(edges(edges_facette(:),:));
+    vloc_base=v(nodes_facette,:);
     vloc_extrude=vloc_base+normales(i,:)*L;
     vshp=[vloc_base;vloc_extrude];
     prismes{i}=alphaShape(vshp(:,1),vshp(:,2),vshp(:,3),Inf);
-%       plot(prismes{i},'facealpha',alpha,'facecolor','r','edgecolor','g','edgealpha',alpha)
-%        hold on
-%        pause(0.6)
 end
 
 toits=cell(nv,1);
 
-for i=1:ne % toits
+for i=1:ne
     fac_loc=domain.edges2facets(i,:);
     p1=v(edges(i,1),:);
     p2=v(edges(i,2),:);
@@ -675,9 +664,6 @@ for i=1:ne % toits
     p6=p2+normales(fac_loc(2),:)*L;
     p=[p1;p2;p3;p4;p5;p6];
     toits{i}=alphaShape(p(:,1),p(:,2),p(:,3),Inf);
-%       plot(toits{i},'facealpha',alpha,'facecolor','g','edgecolor','g','edgealpha',alpha)
-%       hold on
-%       pause(0.6)
 end
 
 cones=cell(nv,1);
@@ -689,9 +675,6 @@ for i=1:nv % cones
         p=[p;p(1,:)+L*normales(fac_loc(j),:)];
     end
     cones{i}=alphaShape(p(:,1),p(:,2),p(:,3),Inf);
-%       plot(cones{i},'facealpha',alpha,'facecolor','b','edgecolor','b','edgealpha',alpha)
-%       hold on
-%      pause(0.6)
 end
 
 end
@@ -747,7 +730,7 @@ if nargin <=5 || isempty(epsilon)
     epsilon=1e-7;
 end
 
-    % 1) projection sur les vertices (triangles)
+% 1) projection onto vertices (triangles)
 N=length(triangles);
 for i=1:N
     s=triangles{i}.Vertices;
@@ -758,7 +741,7 @@ for i=1:N
     end
 end
 
-% 2) projection sur les edges (rectangles)
+% 2) projection onto edges (rectangles)
 
 for i=1:N
     s=rectangles{i}.Vertices;
@@ -779,7 +762,7 @@ p1 = vector(2,:);
 q=shiftdim(q,-2);
 
 a = [-q(1,1,:,1).*(p1(1)-p0(1)) - q(1,1,:,2).*(p1(2)-p0(2)); ...
-    repmat(-p0(2).*(p1(1)-p0(1)) + p0(1).*(p1(2)-p0(2)),[ 1,1,size(q,3)])]; 
+    repmat(-p0(2).*(p1(1)-p0(1)) + p0(1).*(p1(2)-p0(2)),[ 1,1,size(q,3)])];
 b = [p1(1) - p0(1), p1(2) - p0(2);...
     p0(2) - p1(2), p1(1) - p0(1)];
 
@@ -794,7 +777,7 @@ function rho=projection3D(rho,un,prismes,toits,cones,facets,edges,vertices,epsil
 if nargin<=8 || isempty(epsilon)
     epsilon=1e-7;
 end
-    % 1) projection sur les vertices (cones)
+% 1) projection onto vertices
 N=length(cones);
 vertices=vertices-mean(vertices,1);
 for i=1:N
@@ -806,7 +789,7 @@ for i=1:N
     end
 end
 
-% 2) projection sur les edges (toits)
+% 2) projection onto edges
 
 N=length(toits);
 for i=1:N
@@ -819,7 +802,7 @@ for i=1:N
     end
 end
 
-% 3) projection sur les facets (prismes)
+% 3) projection onto facets
 
 N=length(prismes);
 for i=1:N
@@ -845,4 +828,214 @@ function [ProjPoint] = proj_plan(n,p, q)
 % project onto the plane
 q=permute(q,[3,2,1]);
 ProjPoint = (q - mult(q - p, n(:)).*n);
+end
+
+function plotcolor2D(p,elts,data)
+elt1=elts(:,1);
+elt2=elts(:,2);
+elt3=elts(:,3);
+x=[p(elt1,1), p(elt2,1), p(elt3,1)];
+y=[p(elt1,2), p(elt2,2), p(elt3,2)];
+z = zeros(size(x));
+patch(x.',y.',z.',data(:).','Edgecolor','none');
+end
+
+function couleurs=legend2color(legende,inv)
+
+if nargin<=1 || isempty(inv)
+    inv=0;
+end
+
+dict_colors.fer=[0 0 0]-0.5;
+dict_colors.iron=[0 0 0]-0.5;
+dict_colors.fesi=[0 0 0]-0.5;
+dict_colors.fesi1=[0 0 0]-0.5;
+dict_colors.fesi2=[0 0 0]-0.5;
+dict_colors.feco=[0 0 0]-0.5;
+dict_colors.feni=[0 0 0]-0.5;
+dict_colors.smc=[0 0 0]-0.5;
+
+dict_colors.air=[1 1 1]-0.5;
+
+dict_colors.ap=[1 0 0]-0.5;
+dict_colors.am=[1 0 1]-0.5;
+dict_colors.bp=[0 1 0]-0.5;
+dict_colors.bm=[1 1 0]-0.5;
+dict_colors.cp=[0 0 1]-0.5;
+dict_colors.cm=[0 1 1]-0.5;
+
+
+dict_colors.("v1")=[0 0 0]-0.5;
+dict_colors.("v2")=[1 0 0]-0.5;
+dict_colors.("v3")=[1 0 1]-0.5;
+dict_colors.("v4")=[0 1 0]-0.5;
+dict_colors.("v5")=[1 1 0]-0.5;
+dict_colors.("v6")=[0 0 1]-0.5;
+dict_colors.("v7")=[0 1 1]-0.5;
+dict_colors.("v8")=[1 1 1]-0.5;
+dict_colors.("v9")=[0.8 0.2 0.2]-0.5;
+dict_colors.("v10")=[0.8 0.2 0.8]-0.5;
+dict_colors.("v11")=[0.2 0.8 0.2]-0.5;
+dict_colors.("v12")=[0.8 0.8 0.2]-0.5;
+dict_colors.("v13")=[0.2 0.2 0.8]-0.5;
+dict_colors.("v14")=[0.2 0.8 0.8]-0.5;
+dict_colors.("v15")=[0.6 0.1 0.1]-0.5;
+dict_colors.("v16")=[0.1 0.1 0.6]-0.5;
+dict_colors.("v17")=[0.1 0.6 0.1]-0.5;
+dict_colors.("v18")=[0.6 0.6 0.1]-0.5;
+dict_colors.("v19")=[0.1 0.1 0.6]-0.5;
+dict_colors.("v20")=[0.1 0.1 0.6]-0.5;
+
+dict_colors.dp=[0.8 0.2 0.2]-0.5;
+dict_colors.dm=[0.8 0.2 0.8]-0.5;
+dict_colors.ep=[0.2 0.8 0.2]-0.5;
+dict_colors.em=[0.8 0.8 0.2]-0.5;
+dict_colors.fp=[0.2 0.2 0.8]-0.5;
+dict_colors.fm=[0.2 0.8 0.8]-0.5;
+dict_colors.gp=[0.6 0.1 0.1]-0.5;
+dict_colors.gm=[0.1 0.1 0.6]-0.5;
+dict_colors.hp=[0.1 0.6 0.1]-0.5;
+dict_colors.hm=[0.6 0.6 0.1]-0.5;
+dict_colors.ip=[0.1 0.1 0.6]-0.5;
+dict_colors.im=[0.1 0.1 0.6]-0.5;
+
+dict_colors.mag1=[1 0 0]-0.5;
+dict_colors.mag2=[1 0 1]-0.5;
+dict_colors.mag3=[0 1 0]-0.5;
+dict_colors.mag4=[1 1 0]-0.5;
+dict_colors.mag5=[0 0 1]-0.5;
+dict_colors.mag6=[0 1 1]-0.5;
+dict_colors.mag7=[1 0 0]-0.5;
+dict_colors.mag8=[1 0 1]-0.5;
+dict_colors.mag9=[0 1 0]-0.5;
+dict_colors.mag10=[1 1 0]-0.5;
+dict_colors.mag11=[0 0 1]-0.5;
+dict_colors.mag12=[0 1 1]-0.5;
+
+dict_colors.magnet1=[0.3 0.3  0.3 ]-0.5;
+dict_colors.magnet2=[0.3 0.3  0.3 ]-0.5;
+dict_colors.magnet3=[0.3 0.3  0.3 ]-0.5;
+dict_colors.magnet4=[0.3 0.3  0.3 ]-0.5;
+dict_colors.magnet5=[0.3 0.3  0.3 ]-0.5;
+dict_colors.magnet6=[0.3 0.3  0.3 ]-0.5;
+dict_colors.magnet7=[0.3 0.3  0.3 ]-0.5;
+dict_colors.magnet8=[0.3 0.3  0.3 ]-0.5;
+dict_colors.magnet9=[0.3 0.3  0.3 ]-0.5;
+dict_colors.magnet10=[0.3 0.3  0.3 ]-0.5;
+dict_colors.magnet11=[0.3 0.3  0.3 ]-0.5;
+dict_colors.magnet12=[0.3 0.3  0.3 ]-0.5;
+
+
+dict_colors.mag_h=[1 0 0]-0.5;
+dict_colors.mag_b=[1 0 1]-0.5;
+dict_colors.mag_l=[0 1 0]-0.5;
+dict_colors.mag_r=[1 1 0]-0.5;
+
+dict_colors.mag_n=[1 0 0]-0.5;
+dict_colors.mag_s=[1 0 1]-0.5;
+dict_colors.mag_e=[0 1 0]-0.5;
+dict_colors.mag_w=[1 1 0]-0.5;
+
+dict_colors.mag_up=[1 0 0]-0.5;
+dict_colors.mag_down=[1 0 1]-0.5;
+dict_colors.mag_right=[0 1 0]-0.5;
+dict_colors.mag_left=[1 1 0]-0.5;
+
+
+dict_colors.fer1=[0 0 0]-0.5;
+dict_colors.fer2=[0 0 1]-0.5;
+dict_colors.fer3=[0 1 0]-0.5;
+dict_colors.fer4=[0 1 1]-0.5;
+dict_colors.fer5=[1 0 0]-0.5;
+dict_colors.fer6=[1 0 1]-0.5;
+dict_colors.fer7=[1 1 0]-0.5;
+
+dict_colors.conducteur=[1 0.5 0]-0.5;
+dict_colors.aimant=[1 0 0]-0.5;
+dict_colors.conducteurs=[1 0.5 0]-0.5;
+dict_colors.aimants=[1 0 0]-0.5;
+dict_colors.mag=[1 0 0]-0.5;
+dict_colors.fers=[1 0 0]-0.5;
+
+dict_colors.inductor=[0.8 0 0.2]-0.5;
+dict_colors.inducteur=[0.8 0 0.2]-0.5;
+dict_colors.indp=[0.8 0 0.2]-0.5;
+dict_colors.indm=[0.2 0 0.8]-0.5;
+
+
+if nargin==0 || isempty(legende)
+    couleurs=convertCharsToStrings(fieldnames(dict_colors));
+else
+    legende(lower(legende)=="a+")="ap";
+    legende(lower(legende)=="a-")="am";
+    legende(lower(legende)=="b+")="bp";
+    legende(lower(legende)=="b-")="bm";
+    legende(lower(legende)=="c+")="cp";
+    legende(lower(legende)=="c-")="cm";
+    legende(lower(legende)=="d+")="dp";
+    legende(lower(legende)=="d-")="dm";
+    legende(lower(legende)=="e+")="ep";
+    legende(lower(legende)=="e-")="em";
+    legende(lower(legende)=="f+")="fp";
+    legende(lower(legende)=="f-")="fm";
+    legende(lower(legende)=="g+")="gp";
+    legende(lower(legende)=="g-")="gm";
+    legende(lower(legende)=="h+")="hp";
+    legende(lower(legende)=="h-")="hm";
+    legende(lower(legende)=="i+")="ip";
+    legende(lower(legende)=="i-")="im";
+    
+    legende(lower(legende)=="ind-")="indm";
+    legende(lower(legende)=="ind+")="indp";
+    
+    legend2=legende;
+    if inv
+        legend2(lower(legende)=="ap")="am";
+        legend2(lower(legende)=="am")="ap";
+        legend2(lower(legende)=="bm")="bp";
+        legend2(lower(legende)=="bp")="bm";
+        legend2(lower(legende)=="cm")="cp";
+        legend2(lower(legende)=="cp")="cm";
+        legend2(lower(legende)=="dp")="dm";
+        legend2(lower(legende)=="dm")="dp";
+        legend2(lower(legende)=="em")="ep";
+        legend2(lower(legende)=="ep")="em";
+        legend2(lower(legende)=="fm")="fp";
+        legend2(lower(legende)=="fp")="fm";
+        legend2(lower(legende)=="gp")="gm";
+        legend2(lower(legende)=="gm")="gp";
+        legend2(lower(legende)=="hm")="hp";
+        legend2(lower(legende)=="hp")="hm";
+        legend2(lower(legende)=="im")="ip";
+        legend2(lower(legende)=="ip")="im";
+        
+        legend2(lower(legende)=="mag_up")="mag_down";
+        legend2(lower(legende)=="mag_down")="mag_up";
+        legend2(lower(legende)=="mag_n")="mag_s";
+        legend2(lower(legende)=="mag_s")="mag_n";
+        legend2(lower(legende)=="mag_e")="mag_w";
+        legend2(lower(legende)=="mag_w")="mag_e";
+        legend2(lower(legende)=="mag_right")="mag_left";
+        legend2(lower(legende)=="mag_left")="mag_right";
+        legend2(lower(legende)=="mag_h")="mag_b";
+        legend2(lower(legende)=="mag_b")="mag_h";
+        legend2(lower(legende)=="mag_l")="mag_r";
+        legend2(lower(legende)=="mag_r")="mag_l";
+        
+        legend2(lower(legende)=="indp")="indm";
+        legend2(lower(legende)=="indm")="indp";
+    end
+    
+    
+    for i=1:length(legend2)
+        try
+            couleurs(i,:)=dict_colors.(lower(legend2(i)));
+        catch
+            couleurs(i,:)=[0,0,0];
+        end
+    end
+    
+end
+
+
 end
