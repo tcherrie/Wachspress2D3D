@@ -1,20 +1,35 @@
-%Copyright (C) 2022 Théodore CHERRIERE (theodore.cherriere@ens-paris-saclay.fr)
-
-%This program is free software: you can redistribute it and/or modify
-%it under the terms of the GNU General Public License as published by
-%the Free Software Foundation, either version 3 of the License, or
-%any later version.
-
-%This program is distributed in the hope that it will be useful,
-%but WITHOUT ANY WARRANTY; without even the implied warranty of
-%MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%GNU General Public License for more details.
-
-%You should have received a copy of the GNU General Public License
-%along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 classdef Domain
     %Domain Class for domain objects
+    %
+    % To create a domain, use the constructor obj = Domain(type)
+    %
+    % For 0D, 1D and 2D regular polytopes, type is a number which
+    % indicates the number of vertices :
+    %  type = 1 : 1 vertex = a dot (0D)
+    %  type = 2 : 2 vertices = a line (1D)
+    %  type = n > 2 : a regular 2D polygon with n vertices
+    %
+    % For 3D polytopes, type is a string which denotes a specific
+    % polytope. Available :
+    %  "tetra" or "tetraedron" -> tetraedron
+    %  "cube" -> cube
+    %  "diamondN" -> diamond with a base of N vertices (N is an integer)
+    %  "prismN" -> prism with a base of N vertices (N is an integer)
+    %
+    %Copyright (C) 2022 Théodore CHERRIERE (theodore.cherriere@ens-paris-saclay.fr)
+    %This program is free software: you can redistribute it and/or modify
+    %it under the terms of the GNU General Public License as published by
+    %the Free Software Foundation, either version 3 of the License, or
+    %any later version.
+    %
+    %This program is distributed in the hope that it will be useful,
+    %but WITHOUT ANY WARRANTY; without even the implied warranty of
+    %MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    %GNU General Public License for more details.
+    %
+    %You should have received a copy of the GNU General Public License
+    %along with this program.  If not, see <https://www.gnu.org/licenses/>.
     
     properties
         vertices  % cartesian coordinates of vertices
@@ -29,12 +44,14 @@ classdef Domain
     
     methods
         function obj = Domain(type)
+            % obj = Domain(type)
+            % Constructor of a domain
             % For 0D, 1D and 2D regular polytopes, type is a number which
             % indicates the number of vertices :
             %  type = 1 -> a dot (0D)
             %  type = 2 -> a line (1D)
             %  type = n > 2 -> a regular 2D polygon with n vertices
-            
+            %
             % For 3D polytopes, type is a string which denotes a specific
             % polytope. Available :
             %  "tetra" or "tetraedron" -> tetraedron
@@ -240,6 +257,8 @@ classdef Domain
                 obj.dimension=3;
             end
         end
+        
+        %% Projection
         
         function val = projection(obj,val)
             % projection on the domain
@@ -590,16 +609,16 @@ v=v-mean(v,1);
 v=v*(1-epsilon);
 edges=[(1:nv).',[(2:nv),1].'];
 vertices=v;
-normales=[0,1;-1 0]*(v(edges(:,2),:)-v(edges(:,1),:)).';
-normales=((normales).')./vecnorm(normales.',2,2);
+normals=[0,1;-1 0]*(v(edges(:,2),:)-v(edges(:,1),:)).';
+normals=((normals).')./vecnorm(normals.',2,2);
 
 rectangles=cell(nv,1);
 
 for i=1:nv % rectangle
     p1=[v(edges(i,1),1),v(edges(i,1),2)];
     p4=[v(edges(i,2),1),v(edges(i,2),2)];
-    p2=p1+100*normales(i,:);
-    p3=p4+100*normales(i,:);
+    p2=p1+100*normals(i,:);
+    p3=p4+100*normals(i,:);
     p=[p1;p2;p3;p4];
     rectangles{i}=polyshape(p(:,1),p(:,2));
 end
@@ -608,19 +627,19 @@ triangles=cell(nv,1);
 
 for i=1:nv-1 % triangles
     p1=v(i+1,:);
-    p2=p1+100*normales(i,:);
-    p3=p1+100*normales(i+1,:);
+    p2=p1+100*normals(i,:);
+    p3=p1+100*normals(i+1,:);
     p=[p1;p2;p3];
     triangles{i+1}=polyshape(p(:,1),p(:,2));
 end
 p1=v(1,:);
-p2=p1+100*normales(nv,:);
-p3=p1+100*normales(1,:);
+p2=p1+100*normals(nv,:);
+p3=p1+100*normals(1,:);
 p=[p1;p2;p3];
 triangles{1}=polyshape(p(:,1),p(:,2));
 end
 
-function [prismes,toits,cones,facets,edges,vertices]=variete_normale3D(domain,epsilon)
+function [prisms,roofs,cones,facets,edges,vertices]=variete_normale3D(domain,epsilon)
 
 if nargin<=2
     epsilon=1e-7;
@@ -641,7 +660,7 @@ alpha=0.2;
 
 nv=length(v); ne=length(edges); nf=length(facets);
 
-prismes=cell(nf,1);
+prisms=cell(nf,1);
 
 for i=1:nf % prismes
     edges_facette=abs(facets{i}(:));
@@ -649,10 +668,10 @@ for i=1:nf % prismes
     vloc_base=v(nodes_facette,:);
     vloc_extrude=vloc_base+normales(i,:)*L;
     vshp=[vloc_base;vloc_extrude];
-    prismes{i}=alphaShape(vshp(:,1),vshp(:,2),vshp(:,3),Inf);
+    prisms{i}=alphaShape(vshp(:,1),vshp(:,2),vshp(:,3),Inf);
 end
 
-toits=cell(nv,1);
+roofs=cell(nv,1);
 
 for i=1:ne
     fac_loc=domain.edges2facets(i,:);
@@ -663,7 +682,7 @@ for i=1:ne
     p5=p1+normales(fac_loc(2),:)*L;
     p6=p2+normales(fac_loc(2),:)*L;
     p=[p1;p2;p3;p4;p5;p6];
-    toits{i}=alphaShape(p(:,1),p(:,2),p(:,3),Inf);
+    roofs{i}=alphaShape(p(:,1),p(:,2),p(:,3),Inf);
 end
 
 cones=cell(nv,1);
