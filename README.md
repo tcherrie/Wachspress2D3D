@@ -6,7 +6,8 @@ The purpose of this code is to define interpolant and l projector on 1D - 2D and
 ![image](https://user-images.githubusercontent.com/72595712/172387565-c65bc494-17af-4f78-9f18-595e04efa7c1.png)
 
 Start by running *run_me2.mlx*, or if it doesn't work because of compatibility issues, *run_me.m*.
-
+For Matlab version earlier than R202B, you have to install MMX on your system :
+<https://github.com/yuvaltassa/mmx>
 
 
 
