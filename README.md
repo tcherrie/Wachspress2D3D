@@ -12,10 +12,15 @@ Hereafter are some examples of projected points onto 2D and 3D polytopes obtaine
 
 ![image](https://user-images.githubusercontent.com/72595712/172387565-c65bc494-17af-4f78-9f18-595e04efa7c1.png)
 
-## 2) Structure
+## 2) Contents
 
 * `run_me.m` and **run_me2.mlx** are examples files.
-* `Domain.m` is a class file which includes the definition of polytopes, the projection and the display methods.
+* `Domain.m` is a class file which includes the definition of polytopes, the projection and the display methods. Among them, you can use :
+    * `domain = Domain(type)` : constructor of a `Domain` instance ; type can be a string or a number, `help Domain` for more details
+    * `domain.projection(x)` : project the points `x` onto `domain`
+    * `domain.plot()` : display the `domain`
+    * `domain.plot_normalFan()` : display the normal fan of `domain`
+    * `domain.plot_Wachspress(n)` : display the shape of the Wachspress basis function associated with the n-vertex
 * `wachspress.m` is a function which returns the values of the Wachspress basis functions and their gradient a given points and a given domain. The points should be inside the domain. This file is an optimized version of a code provided by Floater *et. al.* [^1]
 * `t.m` and `mult.m` are multithread transpose and matrix multiplication operators, respectively, to speed up the calculation in case there are lots of points.
 
