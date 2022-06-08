@@ -20,9 +20,9 @@ Hereafter are some examples of projected points onto 2D and 3D polytopes obtaine
     * `domain.projection(x)` : project the points `x` onto `domain`
     * `domain.plot()` : display the `domain`
     * `domain.plot_normalFan()` : display the normal fan of `domain`
-    * `domain.plot_Wachspress(n)` : display the shape of the Wachspress basis function associated with the n-vertex
+    * `domain.plot_Wachspress(n)` : display the shape of the Wachspress basis function associated with the `n`-vertex
 * `wachspress.m` is a function which returns the values of the Wachspress basis functions and their gradient a given points and a given domain. The points should be inside the domain. This file is an optimized version of a code provided by Floater *et. al.* [^1]
-* `t.m` and `mult.m` are multithread transpose and matrix multiplication operators, respectively, to speed up the calculation in case there are lots of points.
+* `t.m` and `mult.m` are multithread transpose and matrix multiplication operators, respectively, to speed up the calculation when there are lots of points.
 
 ## 3) License
 
