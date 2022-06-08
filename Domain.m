@@ -247,7 +247,7 @@ classdef Domain
                 obj.normals=((normales).')./vecnorm(normales.',2,2);
                 
             elseif size(obj.vertices,2)==3
-                [cones_facets,cones_edges,cones_vertices,facets,edges,vertices]=variete_normale3D(obj);
+                [cones_facets,cones_edges,cones_vertices,facets,edges,vertices]=normalFan3D(obj);
                 obj.normal_fan.cones_facets=cones_facets;
                 obj.normal_fan.cones_edges=cones_edges;
                 obj.normal_fan.cones_vertices=cones_vertices;
@@ -597,6 +597,7 @@ classdef Domain
     end
 end
 
+%% Other useful functions
 
 function [rectangles,triangles,edges,vertices]=normalFan2D(v,epsilon)
 
@@ -639,7 +640,7 @@ p=[p1;p2;p3];
 triangles{1}=polyshape(p(:,1),p(:,2));
 end
 
-function [prisms,roofs,cones,facets,edges,vertices]=variete_normale3D(domain,epsilon)
+function [prisms,roofs,cones,facets,edges,vertices]=normalFan3D(domain,epsilon)
 
 if nargin<=2
     epsilon=1e-7;
@@ -653,10 +654,9 @@ v=v*(1-epsilon);
 edges=domain.edges;
 facets=domain.facets;
 vertices=v;
-normales=domain.normals;
+normals=domain.normals;
 
 L=100;
-alpha=0.2;
 
 nv=length(v); ne=length(edges); nf=length(facets);
 
@@ -666,7 +666,7 @@ for i=1:nf % prismes
     edges_facette=abs(facets{i}(:));
     nodes_facette=unique(edges(edges_facette(:),:));
     vloc_base=v(nodes_facette,:);
-    vloc_extrude=vloc_base+normales(i,:)*L;
+    vloc_extrude=vloc_base+normals(i,:)*L;
     vshp=[vloc_base;vloc_extrude];
     prisms{i}=alphaShape(vshp(:,1),vshp(:,2),vshp(:,3),Inf);
 end
@@ -677,10 +677,10 @@ for i=1:ne
     fac_loc=domain.edges2facets(i,:);
     p1=v(edges(i,1),:);
     p2=v(edges(i,2),:);
-    p3=p1+normales(fac_loc(1),:)*L;
-    p4=p2+normales(fac_loc(1),:)*L;
-    p5=p1+normales(fac_loc(2),:)*L;
-    p6=p2+normales(fac_loc(2),:)*L;
+    p3=p1+normals(fac_loc(1),:)*L;
+    p4=p2+normals(fac_loc(1),:)*L;
+    p5=p1+normals(fac_loc(2),:)*L;
+    p6=p2+normals(fac_loc(2),:)*L;
     p=[p1;p2;p3;p4;p5;p6];
     roofs{i}=alphaShape(p(:,1),p(:,2),p(:,3),Inf);
 end
@@ -691,38 +691,38 @@ for i=1:nv % cones
     fac_loc=domain.vertices2facets{i};
     p=v(i,:);
     for j=1:length(fac_loc)
-        p=[p;p(1,:)+L*normales(fac_loc(j),:)];
+        p=[p;p(1,:)+L*normals(fac_loc(j),:)];
     end
     cones{i}=alphaShape(p(:,1),p(:,2),p(:,3),Inf);
 end
 
 end
 
-function out1= get_transform_plan(plan1,plan2)
+function out1= get_transform_plan(plane1,plane2)
 
-x1=plan1(1,1);
-x2=plan1(2,1);
-x3=plan1(3,1);
+x1=plane1(1,1);
+x2=plane1(2,1);
+x3=plane1(3,1);
 
-y1=plan1(1,2);
-y2=plan1(2,2);
-y3=plan1(3,2);
+y1=plane1(1,2);
+y2=plane1(2,2);
+y3=plane1(3,2);
 
-z1=plan1(1,3);
-z2=plan1(2,3);
-z3=plan1(3,3);
+z1=plane1(1,3);
+z2=plane1(2,3);
+z3=plane1(3,3);
 
-a1=plan2(1,1);
-a2=plan2(2,1);
-a3=plan2(3,1);
+a1=plane2(1,1);
+a2=plane2(2,1);
+a3=plane2(3,1);
 
-b1=plan2(1,2);
-b2=plan2(2,2);
-b3=plan2(3,2);
+b1=plane2(1,2);
+b2=plane2(2,2);
+b3=plane2(3,2);
 
-c1=plan2(1,3);
-c2=plan2(2,3);
-c3=plan2(3,3);
+c1=plane2(1,3);
+c2=plane2(2,3);
+c3=plane2(3,3);
 
 t2 = x1.*y2.*z3;
 t3 = x1.*y3.*z2;
@@ -791,7 +791,7 @@ invb=[b(1,1), b(2,1); b(1,2), b(2,2)]./detb;
 ProjPoint = -mult(invb,a);
 end
 
-function rho=projection3D(rho,un,prismes,toits,cones,facets,edges,vertices,epsilon)
+function rho=projection3D(rho,un,prisms,roofs,cones,facets,edges,vertices,epsilon)
 
 if nargin<=8 || isempty(epsilon)
     epsilon=1e-7;
@@ -810,22 +810,22 @@ end
 
 % 2) projection onto edges
 
-N=length(toits);
+N=length(roofs);
 for i=1:N
-    in=inShape(toits{i},rho);
+    in=inShape(roofs{i},rho);
     if sum(in)>0
         p=vertices(edges(i,1),:);
         vec_dir=vertices(edges(i,2),:)-vertices(edges(i,1),:);
-        projpoints=proj_arete((1-epsilon)*vec_dir,(1-epsilon)*p,rho(in,:));
+        projpoints=proj_edge((1-epsilon)*vec_dir,(1-epsilon)*p,rho(in,:));
         rho(in,:)=shiftdim(projpoints,2);
     end
 end
 
 % 3) projection onto facets
 
-N=length(prismes);
+N=length(prisms);
 for i=1:N
-    in=inShape(prismes{i},rho);
+    in=inShape(prisms{i},rho);
     if sum(in)>0
         p=vertices(edges(abs(facets{i}(1)),1),:);
         n=un(i,:);
@@ -836,7 +836,7 @@ end
 
 end
 
-function [ProjPoint] = proj_arete(vec_dir,p,q)
+function [ProjPoint] = proj_edge(vec_dir,p,q)
 
 q=permute(q,[3,2,1]);
 vec_dir=vec_dir(:)/norm(vec_dir,2);
@@ -859,7 +859,9 @@ z = zeros(size(x));
 patch(x.',y.',z.',data(:).','Edgecolor','none');
 end
 
-function couleurs=legend2color(legende,inv)
+function colors=legend2color(str_legend,inv)
+
+% associate a color to a string
 
 if nargin<=1 || isempty(inv)
     inv=0;
@@ -982,75 +984,75 @@ dict_colors.indp=[0.8 0 0.2]-0.5;
 dict_colors.indm=[0.2 0 0.8]-0.5;
 
 
-if nargin==0 || isempty(legende)
-    couleurs=convertCharsToStrings(fieldnames(dict_colors));
+if nargin==0 || isempty(str_legend)
+    colors=convertCharsToStrings(fieldnames(dict_colors));
 else
-    legende(lower(legende)=="a+")="ap";
-    legende(lower(legende)=="a-")="am";
-    legende(lower(legende)=="b+")="bp";
-    legende(lower(legende)=="b-")="bm";
-    legende(lower(legende)=="c+")="cp";
-    legende(lower(legende)=="c-")="cm";
-    legende(lower(legende)=="d+")="dp";
-    legende(lower(legende)=="d-")="dm";
-    legende(lower(legende)=="e+")="ep";
-    legende(lower(legende)=="e-")="em";
-    legende(lower(legende)=="f+")="fp";
-    legende(lower(legende)=="f-")="fm";
-    legende(lower(legende)=="g+")="gp";
-    legende(lower(legende)=="g-")="gm";
-    legende(lower(legende)=="h+")="hp";
-    legende(lower(legende)=="h-")="hm";
-    legende(lower(legende)=="i+")="ip";
-    legende(lower(legende)=="i-")="im";
+    str_legend(lower(str_legend)=="a+")="ap";
+    str_legend(lower(str_legend)=="a-")="am";
+    str_legend(lower(str_legend)=="b+")="bp";
+    str_legend(lower(str_legend)=="b-")="bm";
+    str_legend(lower(str_legend)=="c+")="cp";
+    str_legend(lower(str_legend)=="c-")="cm";
+    str_legend(lower(str_legend)=="d+")="dp";
+    str_legend(lower(str_legend)=="d-")="dm";
+    str_legend(lower(str_legend)=="e+")="ep";
+    str_legend(lower(str_legend)=="e-")="em";
+    str_legend(lower(str_legend)=="f+")="fp";
+    str_legend(lower(str_legend)=="f-")="fm";
+    str_legend(lower(str_legend)=="g+")="gp";
+    str_legend(lower(str_legend)=="g-")="gm";
+    str_legend(lower(str_legend)=="h+")="hp";
+    str_legend(lower(str_legend)=="h-")="hm";
+    str_legend(lower(str_legend)=="i+")="ip";
+    str_legend(lower(str_legend)=="i-")="im";
     
-    legende(lower(legende)=="ind-")="indm";
-    legende(lower(legende)=="ind+")="indp";
+    str_legend(lower(str_legend)=="ind-")="indm";
+    str_legend(lower(str_legend)=="ind+")="indp";
     
-    legend2=legende;
+    legend2=str_legend;
     if inv
-        legend2(lower(legende)=="ap")="am";
-        legend2(lower(legende)=="am")="ap";
-        legend2(lower(legende)=="bm")="bp";
-        legend2(lower(legende)=="bp")="bm";
-        legend2(lower(legende)=="cm")="cp";
-        legend2(lower(legende)=="cp")="cm";
-        legend2(lower(legende)=="dp")="dm";
-        legend2(lower(legende)=="dm")="dp";
-        legend2(lower(legende)=="em")="ep";
-        legend2(lower(legende)=="ep")="em";
-        legend2(lower(legende)=="fm")="fp";
-        legend2(lower(legende)=="fp")="fm";
-        legend2(lower(legende)=="gp")="gm";
-        legend2(lower(legende)=="gm")="gp";
-        legend2(lower(legende)=="hm")="hp";
-        legend2(lower(legende)=="hp")="hm";
-        legend2(lower(legende)=="im")="ip";
-        legend2(lower(legende)=="ip")="im";
+        legend2(lower(str_legend)=="ap")="am";
+        legend2(lower(str_legend)=="am")="ap";
+        legend2(lower(str_legend)=="bm")="bp";
+        legend2(lower(str_legend)=="bp")="bm";
+        legend2(lower(str_legend)=="cm")="cp";
+        legend2(lower(str_legend)=="cp")="cm";
+        legend2(lower(str_legend)=="dp")="dm";
+        legend2(lower(str_legend)=="dm")="dp";
+        legend2(lower(str_legend)=="em")="ep";
+        legend2(lower(str_legend)=="ep")="em";
+        legend2(lower(str_legend)=="fm")="fp";
+        legend2(lower(str_legend)=="fp")="fm";
+        legend2(lower(str_legend)=="gp")="gm";
+        legend2(lower(str_legend)=="gm")="gp";
+        legend2(lower(str_legend)=="hm")="hp";
+        legend2(lower(str_legend)=="hp")="hm";
+        legend2(lower(str_legend)=="im")="ip";
+        legend2(lower(str_legend)=="ip")="im";
         
-        legend2(lower(legende)=="mag_up")="mag_down";
-        legend2(lower(legende)=="mag_down")="mag_up";
-        legend2(lower(legende)=="mag_n")="mag_s";
-        legend2(lower(legende)=="mag_s")="mag_n";
-        legend2(lower(legende)=="mag_e")="mag_w";
-        legend2(lower(legende)=="mag_w")="mag_e";
-        legend2(lower(legende)=="mag_right")="mag_left";
-        legend2(lower(legende)=="mag_left")="mag_right";
-        legend2(lower(legende)=="mag_h")="mag_b";
-        legend2(lower(legende)=="mag_b")="mag_h";
-        legend2(lower(legende)=="mag_l")="mag_r";
-        legend2(lower(legende)=="mag_r")="mag_l";
+        legend2(lower(str_legend)=="mag_up")="mag_down";
+        legend2(lower(str_legend)=="mag_down")="mag_up";
+        legend2(lower(str_legend)=="mag_n")="mag_s";
+        legend2(lower(str_legend)=="mag_s")="mag_n";
+        legend2(lower(str_legend)=="mag_e")="mag_w";
+        legend2(lower(str_legend)=="mag_w")="mag_e";
+        legend2(lower(str_legend)=="mag_right")="mag_left";
+        legend2(lower(str_legend)=="mag_left")="mag_right";
+        legend2(lower(str_legend)=="mag_h")="mag_b";
+        legend2(lower(str_legend)=="mag_b")="mag_h";
+        legend2(lower(str_legend)=="mag_l")="mag_r";
+        legend2(lower(str_legend)=="mag_r")="mag_l";
         
-        legend2(lower(legende)=="indp")="indm";
-        legend2(lower(legende)=="indm")="indp";
+        legend2(lower(str_legend)=="indp")="indm";
+        legend2(lower(str_legend)=="indm")="indp";
     end
     
     
     for i=1:length(legend2)
         try
-            couleurs(i,:)=dict_colors.(lower(legend2(i)));
+            colors(i,:)=dict_colors.(lower(legend2(i)));
         catch
-            couleurs(i,:)=[0,0,0];
+            colors(i,:)=[0,0,0];
         end
     end
     
