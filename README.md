@@ -16,7 +16,7 @@ Hereafter are some examples of projected points onto 2D and 3D polytopes obtaine
 
 * `run_me.m` and **run_me2.mlx** are examples files.
 * `Domain.m` is a class file which includes the definition of polytopes, the projection and the display methods. Among them, you can use :
-    * `domain = Domain(type)` : constructor of a `Domain` instance ; type can be a string or a number, `help Domain` for more details
+    * `domain = Domain(type)` : constructor of a `Domain` instance ; `type` can be a string or a number, type `help Domain` for more details
     * `domain.projection(x)` : project the points `x` onto `domain`
     * `domain.plot()` : display the `domain`
     * `domain.plot_normalFan()` : display the normal fan of `domain`
