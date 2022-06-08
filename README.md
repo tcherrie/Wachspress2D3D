@@ -2,7 +2,7 @@
 
 ## 1) Quickstart
 
-The purpose of this code is to define interpolant and l projector on 1D - 2D and 3D convex polytopes.
+The purpose of this code is to define interpolant and projector on 1D - 2D and 3D convex polytopes.
 Start by running *run_me2.mlx*, or if it doesn't work because of compatibility issues, *run_me.m*.
 For Matlab versions earlier than R2020B, you have to install MMX on your system :
 <https://github.com/yuvaltassa/mmx>
@@ -15,7 +15,11 @@ For Matlab versions earlier than R2020B, you have to install MMX on your system 
 
 * **run_me.m** and **run_me2.mlx** are examples files.
 * **Domain.m** is a class file which includes the definition of polytopes, the projection and the display methods.
-* **wachspress.m** is a function which returns the values of the Wachspress basis functions and their gradient a given points and a given domain. The points should be inside the domain.
+* **wachspress.m** is a function which returns the values of the Wachspress basis functions and their gradient a given points and a given domain. The points should be inside the domain. This file is an optimized version of 
+*M. Floater, A. Gillette, and N. Sukumar,
+“Gradient bounds for Wachspress coordinates on polytopes,”
+SIAM J. Numer. Anal., vol. 52, no. 1, pp. 515–532, 2014,%
+doi: 10.1137/130925712*
 * **t.m** and **mult.m** are multithread transpose and matrix multiplication operators to speed up the calculation in case there are lots of points.
 
 ## 3) License
