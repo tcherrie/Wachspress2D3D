@@ -43,8 +43,8 @@ classdef Domain
     end
     
     methods
-        function obj = Domain(type)
-            % obj = Domain(type)
+        function obj = Domain(type,radius)
+            % obj = Domain(type,<radius>)
             % Constructor of a domain
             % For 0D, 1D and 2D regular polytopes, type is a number which
             % indicates the number of vertices :
@@ -59,6 +59,15 @@ classdef Domain
             %  "diamondN" -> diamond with a base of N vertices (N is an integer)
             %  "prismN" -> prism with a base of N vertices (N is an integer)
             % Feel free to add other types of 3D domains.
+            % 
+            % <radius> is an optional value to specify the radius of the
+            % circumscribed circle / sphere circumscribed to the domain (
+            % set to 1 by default)
+            
+            if nargin<=1 || isempty(radius)
+                radius=1;
+            end
+            
             
             if class(type)=="double" && type==1 % dimension 0 : a dot
                 obj.vertices=0;
@@ -74,7 +83,7 @@ classdef Domain
                 if  length(type)==1
                     theta=linspace(0,2*pi,type+1)+(2*pi)/(2*type);
                     theta=shiftdim(theta(1:end-1),-2);
-                    R=mult([cos(theta),-sin(theta);sin(theta),cos(theta)],[1;0]);
+                    R=mult([cos(theta),-sin(theta);sin(theta),cos(theta)],[radius;0]);
                     obj.vertices=reshape(R,[2,type]).';
                     v=obj.vertices;
                 else
@@ -88,9 +97,10 @@ classdef Domain
             elseif lower(type)=="tetra" || lower(type)=="tetraedron"
                 theta=linspace(0,2*pi,3+1)+(2*pi)/(2*3);
                 theta=shiftdim(theta(1:end-1),-2);
-                R=mult([cos(theta),-sin(theta);sin(theta),cos(theta)],[1;0]);
+                h = 1/3*radius;
+                R=mult([cos(theta),-sin(theta);sin(theta),cos(theta)],[radius*2*sqrt(2)/3;0]);
                 v1=reshape(R,[2,3]).';
-                obj.vertices=[v1,zeros(3,1);[0 0 1.5]];
+                obj.vertices=[v1,-ones(3,1)*h;[0 0 radius]];
                 obj.vertices=obj.vertices-mean(obj.vertices,1);
                 v=obj.vertices;
                 
@@ -115,7 +125,9 @@ classdef Domain
                 end
                 
             elseif lower(type)=="cube"
-                v=[0,0,0;1 0 0;0 1 0 ;1 1 0; 0 0 1; 1 0 1; 0 1 1; 1 1 1]; obj.vertices=v-mean(v,1);
+                % should set the radius to 3/sqrt(3) to have a [-1,1] cube
+                v=2*radius*sqrt(3)/3*[0,0,0;1 0 0;0 1 0 ;1 1 0; 0 0 1; 1 0 1; 0 1 1; 1 1 1]; 
+                obj.vertices=v-mean(v,1);
                 obj.vertices2facets={[1,4,6];[2,1,6];[4,3,6];[3,2,6];[5,4,1];[5,1,2];[5,3,4];[5,2,3]};
                 
                 un(1,:)=cross(v(2,:),v(5,:)); un(2,:)=cross(v(4,:)-v(2,:),v(6,:)-v(2,:));
@@ -143,8 +155,8 @@ classdef Domain
                 n  = str2double(extract(lower(type),regexpPattern("\d+")));
                 theta=linspace(0,2*pi,n+1)+pi/n;
                 theta=shiftdim(theta(1:end-1),-2);
-                R=mult([cos(theta),-sin(theta);sin(theta),cos(theta)],[1;0]);
-                v=reshape(R,[2,n]).'; v=[[v,zeros(n,1)];0,0,1;0,0,-1]; obj.vertices=v;
+                R=mult([cos(theta),-sin(theta);sin(theta),cos(theta)],[radius;0]);
+                v=reshape(R,[2,n]).'; v=[[v,zeros(n,1)];0,0,radius;0,0,-radius]; obj.vertices=v;
                 for i=1:n
                     i1=i;
                     i2 = mod(i+n-2,n)+1;
@@ -192,8 +204,8 @@ classdef Domain
                 n  = str2double(extract(lower(type),regexpPattern("\d+")));
                 theta=linspace(0,2*pi,n+1)+pi/n;
                 theta=shiftdim(theta(1:end-1),-2);
-                R=mult([cos(theta),-sin(theta);sin(theta),cos(theta)],[1;0]);
-                v=reshape(R,[2,n]).'; v=[[v,-0.5*ones(n,1)];[v,0.5*ones(n,1)]]; obj.vertices=v;
+                R=mult([cos(theta),-sin(theta);sin(theta),cos(theta)],[sqrt(3)*radius/2;0]);
+                v=reshape(R,[2,n]).'; v=[[v,-radius/2*ones(n,1)];[v,radius/2*ones(n,1)]]; obj.vertices=v;
                 for i=1:n
                     i1=i;
                     i2 = mod(i+n-2,n)+1;
