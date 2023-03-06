@@ -37,7 +37,7 @@ Hereafter are some examples of projected points onto 2D and 3D polytopes obtaine
 
 Please use the following citation reference if you use the code:
 
-    T. Cherrière and L. Laurent. tcherrie/wachspress2d3d: Wachspress2d3d (v1.0.0), June 2022. Zenodo. https://doi.org/10.5281/zenodo.7701776
+    T. Cherrière and L. Laurent. tcherrie/wachspress2d3d: Wachspress2d3d (v1.0.1), June 2022. Zenodo. https://doi.org/10.5281/zenodo.7701776
 
 Bibtex entry:
 
