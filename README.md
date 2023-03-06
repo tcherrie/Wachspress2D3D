@@ -1,7 +1,7 @@
 # Wachspress2D3D
 
 
-[![GitHub license](https://img.shields.io/github/license/tcherrie/Wachspress2D3D)](https://github.com/tcherrie/Wachspress2D3D) [![GitHub release](https://img.shields.io/github/release/tcherrie/Wachspress2D3D.svg)](https://github.com/tcherrie/Wachspress2D3D/releases/) [![GitHub stars](https://img.shields.io/github/stars/tcherrie/Wachspress2D3D)](https://github.com/tcherrie/Wachspress2D3D/stargazers) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6630214.svg)](https://doi.org/10.5281/zenodo.6630214)
+[![GitHub license](https://img.shields.io/github/license/tcherrie/Wachspress2D3D)](https://github.com/tcherrie/Wachspress2D3D) [![GitHub release](https://img.shields.io/github/release/tcherrie/Wachspress2D3D.svg)](https://github.com/tcherrie/Wachspress2D3D/releases/) [![GitHub stars](https://img.shields.io/github/stars/tcherrie/Wachspress2D3D)](https://github.com/tcherrie/Wachspress2D3D/stargazers) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7701776.svg)](https://doi.org/10.5281/zenodo.7701776)
 
 The purpose of this code is to define interpolant and projector on 1D - 2D and 3D convex polytopes.
 
@@ -37,22 +37,22 @@ Hereafter are some examples of projected points onto 2D and 3D polytopes obtaine
 
 Please use the following citation reference if you use the code:
 
-    T. Cherrière and L. Laurent. tcherrie/wachspress2d3d: Wachspress2d3d (v1.0.0), June 2022. Zenodo. https://doi.org/10.5281/zenodo.6630215
+    T. Cherrière and L. Laurent. tcherrie/wachspress2d3d: Wachspress2d3d (v1.0.0), June 2022. Zenodo. https://doi.org/10.5281/zenodo.7701776
 
 Bibtex entry:
 
-    @software{tcherrie_2022_6630215,
+    @software{tcherrie_2022_7701776,
     author       = {Cherrière, Théodore and Laurent, Luc},
     title        = {tcherrie/Wachspress2D3D: Wachspress2D3D},
-    month        = jun,
-    year         = 2022,
+    month        = mar,
+    year         = 2023,
     publisher    = {Zenodo},
-    version      = {v1.0.0},
-    doi          = {10.5281/zenodo.6630215},
-    url          = {https://doi.org/10.5281/zenodo.6630215}
+    version      = {v1.0.1},
+    doi          = {10.5281/zenodo.7701776},
+    url          = {https://doi.org/10.5281/zenodo.7701776}
     }
 
-**NB: version number and DOI must be adapted from [Zenodo's repository.](https://doi.org/10.5281/zenodo.6630214)** 
+**NB: version number and DOI must be adapted from [Zenodo's repository.](https://doi.org/10.5281/zenodo.7701776)** 
 
 ## License
 
