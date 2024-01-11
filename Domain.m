@@ -69,12 +69,12 @@ classdef Domain
             end
             
             
-            if class(type)=="double" && type==1 % dimension 0 : a dot
+            if class(type)=="double" && numel(type)==1 && type==1 % dimension 0 : a dot
                 obj.vertices=0;
                 obj.dimension=0;
                 v=obj.vertices;
                 
-            elseif class(type)=="double" && type==2 % dimension 1 : a line
+            elseif class(type)=="double" && numel(type)==1 && type==2 % dimension 1 : a line
                 obj.vertices=[-0.5;0.5];
                 obj.dimension=1;
                 v=obj.vertices;
@@ -87,8 +87,8 @@ classdef Domain
                     obj.vertices=reshape(R,[2,type]).';
                     v=obj.vertices;
                 else
-                    v=type;
-                    obj.vertices=type;
+                    obj.vertices=type - mean(type,1); % should be centered on the origin
+                    v=obj.vertices;
                 end
                 
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
